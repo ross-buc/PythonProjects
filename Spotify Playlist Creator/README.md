@@ -1,0 +1,2 @@
+# Spotify Playlist Creator 
+A python script that takes a date input from the user in the format of YYYY-MM-DD and then searches the www.billboard.com website for the top 100 songs at that point in time. Once the data has been scraped from the website it will create a new Spotify playlist for the user with all of the songs. 
