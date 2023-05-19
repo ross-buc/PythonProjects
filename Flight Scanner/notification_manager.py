@@ -1,19 +1,34 @@
+import smtplib
 from twilio.rest import Client
-import os
+
+TWILIO_SID = "YOUR TWILIO ACCOUNT SID"
+TWILIO_AUTH_TOKEN = "YOUR TWILIO AUTH TOKEN"
+TWILIO_VIRTUAL_NUMBER = "YOUR TWILIO VIRTUAL NUMBER"
+TWILIO_VERIFIED_NUMBER = "YOUR TWILIO VERIFIED NUMBER"
+MAIL_PROVIDER_SMTP_ADDRESS = "YOUR EMAIL PROVIDER SMTP ADDRESS smtp.gmail.com"
+MY_EMAIL = "YOUR EMAIL"
+MY_PASSWORD = "YOUR PASSWORD"
+
 
 class NotificationManager:
+    def __init__(self):
+        self.client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
 
-    def alert_by_text(self, price, departurecity, departcurecode, arrivalcity, arrivalcode, outbounddate, inbounddate):
-        account_env = os.environ.get("account_sid_env")
-        account_sid = account_env
-        auth_token_env = os.environ.get("auth_token_env")
-        auth_token = auth_token_env
-        client = Client(account_sid, auth_token)
-        my_num_env = os.environ.get("my_num_env")
-        message = client.messages.create(
-            body=f"Low price alert! Only ${price} to fly from {departurecity}-{departcurecode} to {arrivalcity}-"
-                 f"{arrivalcode}, from {outbounddate} to {inbounddate}.",
-            from_='+15674065589',
-            to=my_num_env,
+    def send_sms(self, message):
+        message = self.client.messages.create(
+            body=message,
+            from_=TWILIO_VIRTUAL_NUMBER,
+            to=TWILIO_VERIFIED_NUMBER,
         )
-        print(message.status)
+        print(message.sid)
+
+    def send_emails(self, emails, message):
+        with smtplib.SMTP(MAIL_PROVIDER_SMTP_ADDRESS) as connection:
+            connection.starttls()
+            connection.login(MY_EMAIL, MY_PASSWORD)
+            for email in emails:
+                connection.sendmail(
+                    from_addr=MY_EMAIL,
+                    to_addrs=email,
+                    msg=f"Subject:New Low Price Flight!\n\n{message}".encode("utf-8"),
+                )

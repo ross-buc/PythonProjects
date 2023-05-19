@@ -1,42 +1,31 @@
+from pprint import pprint
 import requests
-import os
-# This class is responsible for talking to the Google Sheet.
+
+SHEETY_PRICES_ENDPOINT = "YOUR SHEETY PRICES ENDPOINT""
+SHEETY_USERS_ENDPOINT = "YOUR SHEETY USERS ENDPOINT"
 
 
 class DataManager:
-
     def __init__(self):
-        self.data = {}
-        self.current_endpoint = ""
+        self.destination_data = {}
 
-    def update_google_sheet(self):
-        response = requests.put(url=self.current_endpoint, headers=sheety_headers, json=self.data)
-        response.raise_for_status()
-        return
-
-    def update_sheet(self, data):
-        for num in range(len(data)):
-            self.data = {
-                "price": {
-                    "city": data[num]["city"],
-                    "iataCode": data[num]["iataCode"],
-                    "lowestPrice": data[num]["lowestPrice"],
-                }
-            }
-            self.current_endpoint = f"{SHEETY_ENPOINT}/{data[num]['id']}"
-            self.update_google_sheet()
-
-    def initial_data(self):
-        response = requests.get(url=SHEETY_ENPOINT, headers=sheety_headers)
-        response.raise_for_status()
+    def get_destination_data(self):
+        response = requests.get(url=SHEETY_PRICES_ENDPOINT)
         data = response.json()
-        sheet_data = data["prices"]
-        return sheet_data
+        self.destination_data = data["prices"]
+        return self.destination_data
 
+    def update_destination_codes(self):
+        for city in self.destination_data:
+            new_data = {"price": {"iataCode": city["iataCode"]}}
+            response = requests.put(
+                url=f"{SHEETY_PRICES_ENDPOINT}/{city['id']}", json=new_data
+            )
+            print(response.text)
 
-SHEETY_ENPOINT = "https://api.sheety.co/01d994fc556980e962983f4d4e778998/myFlightDeals/prices"
-env_bear_token = os.environ["BEARER_TOK_ENV"]
-bearer_token = env_bear_token
-sheety_headers = {
-    "Authorization": f"Bearer {bearer_token}",
-}
+    def get_customer_emails(self):
+        customers_endpoint = SHEETY_USERS_ENDPOINT
+        response = requests.get(url=customers_endpoint)
+        data = response.json()
+        self.customer_data = data["users"]
+        return self.customer_data
