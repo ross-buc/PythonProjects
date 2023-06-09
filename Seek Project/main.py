@@ -1,10 +1,10 @@
 from send_email import Send_Email
 from html_parser import Soup
-from typing import List
 
 ## Import Classes
 soup = Soup()
 send_email = Send_Email()
+
 
 # fmt: off
 seek_urls = [
@@ -32,20 +32,26 @@ seek_urls = [
     "https://www.seek.com.au/junior-developer-jobs/in-Western-Australia-WA"
 ]
 # fmt: on
+def main():
+    wfh_list_of_jobs = []
+    perth_list_of_jobs = []
 
-wfh_list_of_jobs = []
-perth_list_of_jobs = []
+    for url in seek_urls:
+        seek_soup = soup.create_soup(url)
+        jobs = soup.build_list(seek_soup)
 
-for url in seek_urls:
-    seek_soup = soup.create_soup(url)
-    jobs = soup.build_list(seek_soup)
+        if "home" in url:
+            wfh_list_of_jobs.extend(jobs)
+        else:
+            perth_list_of_jobs.extend(jobs)
 
-    if "home" in url:
-        wfh_list_of_jobs.extend(jobs)
-    else:
-        perth_list_of_jobs.extend(jobs)
+        print(f"{url} complete... loading")
 
-    print(f"{url} complete... loading")
+    print("Search has completed, emailing now...")
+    print(
+        send_email.send_email(wfh_jobs=wfh_list_of_jobs, perth_jobs=perth_list_of_jobs)
+    )
 
-print("Search has completed, emailing now...")
-print(send_email.send_email(wfh_jobs=wfh_list_of_jobs, perth_jobs=perth_list_of_jobs))
+
+if __name__ == "__main__":
+    main()

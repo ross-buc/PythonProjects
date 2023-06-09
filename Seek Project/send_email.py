@@ -77,8 +77,6 @@ class Send_Email:
             """
             message.attach(MIMEText(html_content, "html"))
 
-            # message = f"Subject: Job Alert\n\n<h2>Working From Home Jobs</h2>\n\n{wfh_job_details}\n\n<h2>Perth Based Jobs</h2>\n\n{perth_job_details}"
-
             connection.sendmail(
                 from_addr=my_email, to_addrs=receiver_email, msg=message.as_string()
             )
