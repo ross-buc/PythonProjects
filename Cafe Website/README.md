@@ -1,6 +1,6 @@
-# Café Management API
+# Café Website
 
-This Flask API project is part of Angela Yu's "100 Days of Code" course. It allows users to manage cafés in a database by making GET, POST, PATCH, and DELETE requests. The project uses Flask, SQLAlchemy, and RESTful principles.
+This Flask API project is part of Angela Yu's "100 Days of Code" course. It allows users to manage cafés in a database by making GET and POST requests. The project uses Flask, SQLAlchemy, and RESTful principles.
 
 ## Features
 
