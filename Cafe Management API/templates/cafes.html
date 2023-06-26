@@ -1,0 +1,43 @@
+{% extends 'index.html' %}
+
+{% block content %}
+
+<!-- Page Title -->
+<h1 class="heading">Cafes</h1>
+
+<!-- Cafe table -->
+<div class="table-responsive small">
+    <div class="table-margin">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr class="tr-headings">
+                    <th style="width: 300px">Name</th>
+                    <th>Maps</th>
+                    <th>Location</th>
+                    <th>Seats</th>
+                    <th>Toilet</th>
+                    <th>Wi-Fi</th>
+                    <th>Sockets</th>
+                    <th>Take Calls</th>
+                    <th>Coffee Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cafe in cafes %}
+                <tr>
+                    <td>{{ cafe.name }}</td>
+                    <td><a href="{{ cafe.map_url }}">Maps Link</a></td>
+                    <td>{{ cafe.location }}</td>
+                    <td>{{ cafe.seats }}</td>
+                    <td>{{ cafe.has_toilet }}</td>
+                    <td>{{ cafe.has_wifi }}</td>
+                    <td>{{ cafe.has_sockets }}</td>
+                    <td>{{ cafe.can_take_calls }}</td>
+                    <td>{{ cafe.coffee_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>    
+</div>
+{% endblock %}

@@ -1,17 +1,23 @@
 """
-Python Flask API for managing cafes in a database using SQLAlchemy, RESTful principles, and JSON responses.
+Python Flask API for managing cafes in a database using SQLAlchemy, RESTful principles and Flask.
 """
-import random
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, render_template, redirect, url_for, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_bootstrap import Bootstrap
+from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect
+from wtforms import StringField, SubmitField, SelectField
+from wtforms.validators import DataRequired
 
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = "SECRET KEY"
 
 ##Connect to Database
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///cafes.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
+Bootstrap(app)
 
 
 class Cafe(db.Model):
@@ -22,7 +28,6 @@ class Cafe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), unique=True, nullable=False)
     map_url = db.Column(db.String(500), nullable=False)
-    img_url = db.Column(db.String(500), nullable=False)
     location = db.Column(db.String(250), nullable=False)
     seats = db.Column(db.String(250), nullable=False)
     has_toilet = db.Column(db.Boolean, nullable=False)
@@ -30,6 +35,47 @@ class Cafe(db.Model):
     has_sockets = db.Column(db.Boolean, nullable=False)
     can_take_calls = db.Column(db.Boolean, nullable=False)
     coffee_price = db.Column(db.String(250), nullable=True)
+
+
+class AddForm(FlaskForm):
+    """Create a form on the add page"""
+
+    cafe_name = StringField("Cafe Name", validators=[DataRequired()])
+    map_url = StringField("Map URL", validators=[DataRequired()])
+    location = StringField("Location", validators=[DataRequired()])
+    has_power = SelectField(
+        "Has Power?",
+        choices=[("True", "Yes"), ("False", "No")],
+        validators=[DataRequired()],
+    )
+    has_toilets = SelectField(
+        "Has Toilets?",
+        choices=[("True", "Yes"), ("False", "No")],
+        validators=[DataRequired()],
+    )
+    has_wifi = SelectField(
+        "Has Wifi?",
+        choices=[("True", "Yes"), ("False", "No")],
+        validators=[DataRequired()],
+    )
+    can_take_calls = SelectField(
+        "Can take calls?",
+        choices=[("True", "Yes"), ("False", "No")],
+        validators=[DataRequired()],
+    )
+    seats = SelectField(
+        "How many seats?",
+        choices=[
+            ("0-10", "0-10"),
+            ("10-20", "10-20"),
+            ("20-30", "20-30"),
+            ("30-40", "30-40"),
+            ("50+", "50+"),
+        ],
+        validators=[DataRequired()],
+    )
+    coffee_price = StringField("Coffee Price?", validators=[DataRequired()])
+    submit = SubmitField("Add Cafe")
 
 
 with app.app_context():
@@ -41,143 +87,44 @@ def home():
     """
     Home route for rendering the index.html template.
     """
-    return render_template("index.html")
+    cafes = Cafe.query.all()
+
+    return render_template("cafes.html", cafes=cafes)
 
 
-@app.route("/random", methods=["GET"])
-def random_cafe():
-    """
-    GET route to retrieve a random cafe from the database.
-    """
-    if request.method == "GET":
-        random_cafe = random.choice(Cafe.query.all())
-        print(random_cafe)
-        return jsonify(cafe=random_cafe.name, seats=random_cafe.seats)
-    else:
-        return render_template("index.html")
-
-
-@app.route("/all", methods=["GET"])
-def all_cafes():
-    """
-    GET route to retrieve all cafes from the database.
-    """
-    if request.method == "GET":
-        cafes = Cafe.query.all()
-        cafes_dict = [
-            dict(
-                (column.name, getattr(cafe, column.name))
-                for column in Cafe.__table__.columns
-            )
-            for cafe in cafes
-        ]
-        return jsonify(cafe=cafes_dict)
-    else:
-        return render_template("index.html")
-
-
-@app.route("/add", methods=["POST"])
+@app.route("/add", methods=["GET", "POST"])
 def add():
-    """
-    POST route to add a new cafe to the database.
-    """
-    if request.method == "POST":
+    form = AddForm()
+    if form.validate_on_submit():
         new_cafe = Cafe(
-            name=request.form.get("name"),
-            map_url=request.form.get("map_url"),
-            img_url=request.form.get("img_url"),
-            location=request.form.get("loc"),
-            has_sockets=bool(request.form.get("sockets")),
-            has_toilet=bool(request.form.get("toilet")),
-            has_wifi=bool(request.form.get("wifi")),
-            can_take_calls=bool(request.form.get("calls")),
-            seats=request.form.get("seats"),
-            coffee_price=request.form.get("coffee_price"),
+            name=form.cafe_name.data,
+            map_url=form.map_url.data,
+            location=form.location.data,
+            seats=form.seats.data,
+            has_toilet=form.has_toilets.data.lower() == "true",
+            has_wifi=form.has_wifi.data.lower() == "true",
+            has_sockets=form.has_power.data.lower() == "true",
+            can_take_calls=form.can_take_calls.data.lower() == "true",
+            coffee_price=form.coffee_price.data,
         )
         db.session.add(new_cafe)
         db.session.commit()
-        return jsonify(response={"success": "Successfully added the new cafe."})
-    else:
-        return render_template("index.html")
+        return redirect(url_for("home"))
+    return render_template("add.html", form=form)
 
 
-@app.route("/update-price/<cafe_id>", methods=["PATCH"])
-def patch(cafe_id):
-    """
-    PATCH route to update the coffee price of a specific cafe in the database.
-    """
-    if request.method == "PATCH":
-        print(cafe_id)
-        cafe_to_edit = Cafe.query.get(cafe_id)
-        if cafe_to_edit:
-            new_price = request.args.get("price")
-            cafe_to_edit.coffee_price = new_price
-            db.session.commit()
-            return jsonify(
-                response={"success": "Successfully updated the cafe's coffee price."}
-            )
-        else:
-            return jsonify(
-                error={
-                    "Not Found": "Sorry a cafe with that ID was not found in the database."
-                }
-            )
-    else:
-        return render_template("index.html")
-
-
-@app.route("/report-closed/<cafe_id>", methods=["DELETE"])
-def delete(cafe_id):
-    """
-    DELETE route to delete a specific cafe from the database if the API-KEY is correct.
-    """
-    if request.method == "DELETE":
+@app.route("/delete", methods=["GET", "POST"])
+def delete():
+    cafes = Cafe.query.all()
+    if request.method == "POST":
+        cafe_id = request.args.get("cafe_id")
         cafe_to_delete = Cafe.query.get(cafe_id)
-        API_KEY = "TopSecretAPIKey"
-        user_api_key = request.args.get("api-key")
-        if user_api_key != API_KEY:
-            return jsonify(error={"Wrong API KEY": "Please enter a valid API KEY."})
-
-        if not cafe_to_delete:
-            return jsonify(
-                error={
-                    "Not Found": "Sorry, a cafe with that ID was not found in the database."
-                }
-            )
         db.session.delete(cafe_to_delete)
         db.session.commit()
-        return jsonify(response={"success": "Successfully deleted the cafe."})
+        print(cafe_to_delete)
+        return redirect(url_for("home"))
     else:
-        return render_template("index.html")
-
-
-@app.route("/search", methods=["GET"])
-def search():
-    """
-    GET route to search for cafes at a specific location in the database.
-    """
-    location = request.args.get("loc")
-    if request.method == "GET":
-        cafes = Cafe.query.all()
-        cafes_at_location = []
-        for cafe in cafes:
-            if cafe.location == location:
-                cafes_at_location.append(cafe)
-        cafes_dict = [
-            dict(
-                (column.name, getattr(cafe, column.name))
-                for column in Cafe.__table__.columns
-            )
-            for cafe in cafes_at_location
-        ]
-        if cafes_dict:
-            return jsonify(cafe=cafes_dict)
-        else:
-            return jsonify(
-                error={"Not Found": "Sorry, we don't have a cafe at that location"}
-            )
-    else:
-        return render_template("index.html")
+        return render_template("delete.html", cafes=cafes)
 
 
 if __name__ == "__main__":
