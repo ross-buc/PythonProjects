@@ -1,0 +1,32 @@
+.container {
+    margin-left: 10px;
+    margin-right: 10px;
+    max-width: none;
+    width: auto;
+}
+
+.table-margin {
+    margin-left: 35px;
+    margin-right: 35px;
+}
+
+.tr-headings th {
+    width: 250px;
+}
+
+.heading {
+    margin-left: 35px;
+}
+
+.add-task-button {
+    margin-top: 15px;
+}
+
+.strikethrough {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.complete {
+    opacity: 0.6;
+}

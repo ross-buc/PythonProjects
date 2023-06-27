@@ -1,0 +1,41 @@
+{% extends 'header.html' %}
+
+{% block content %}
+
+<!-- Page Title -->
+<h1 class="heading">Tasks</h1>
+
+<!-- Task table -->
+<div class="table-responsive small">
+    <div class="table-margin">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr class="tr-headings">
+                    <th style="width: 300px">Description</th>
+                    <th style="text-align: center;">Priority</th>
+                    <th style="text-align: center;">Complete</th>
+                    <th style="text-align: center;">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td class="{{ 'strikethrough' if task.complete else '' }}">{{ task.task }}</td>
+                    <td style="text-align: center;" class="{{ 'strikethrough' if task.complete else '' }}">{{ task.priority }}</td>
+                    <td style="text-align: center;" class="{{ 'complete' if task.complete else '' }}">
+                        <form action="{{ url_for('complete', id=task.id) }}" method="POST">
+                            <button type="submit" class="complete-button" style="border: none; background-color: transparent;">✅</button>
+                        </form>
+                    </td>
+                    <td style="text-align: center;" class="{{ 'complete' if task.complete else '' }}">
+                        <form action="{{ url_for('delete', id=task.id) }}" method="POST">
+                            <button type="submit" class="delete-button" style="border: none; background-color: transparent;" onclick="return confirm('Are you sure you want to delete this task?')">❌</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>    
+</div>
+{% endblock %}
